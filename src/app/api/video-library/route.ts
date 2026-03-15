@@ -1,4 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { apiRateLimiter } from '@/lib/rateLimit'
+import { db } from '@/lib/db'
+import { collection, getDocs } from 'firebase/firestore'
 
 const VIDEO_DATA = [
   { id: '1', title: 'The Story of Lord Shiva', category: 'Spiritual Shorts', videoUrl: '', thumbnailUrl: '🕉️', duration: 510 },
@@ -11,6 +14,24 @@ const VIDEO_DATA = [
   { id: '8', title: 'Tirupati Balaji Documentary', category: 'Temple Docs', videoUrl: '', thumbnailUrl: '🏛️', duration: 2100 },
 ]
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
+  const rateLimitResponse = apiRateLimiter.check(ip)
+  
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
+  try {
+    const querySnapshot = await getDocs(collection(db, 'video_library'))
+    if (!querySnapshot.empty) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const videos = querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))
+      return NextResponse.json({ videos })
+    }
+  } catch (error) {
+    console.error('Error fetching video_library:', error)
+  }
+
   return NextResponse.json({ videos: VIDEO_DATA })
 }

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { collection, getDocs } from 'firebase/firestore'
 
 const BOOKS_DATA = [
   { id: '1', title: 'Bhagavad Gita As It Is', author: 'A.C. Bhaktivedanta', category: 'Spiritual Books', pdfUrl: '', coverImage: '📘' },
@@ -12,5 +14,16 @@ const BOOKS_DATA = [
 ]
 
 export async function GET() {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'books'))
+    if (!querySnapshot.empty) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const books = querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))
+      return NextResponse.json({ books })
+    }
+  } catch (error) {
+    console.error('Error fetching books:', error)
+  }
+
   return NextResponse.json({ books: BOOKS_DATA })
 }

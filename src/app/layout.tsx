@@ -1,6 +1,13 @@
 import type { Metadata } from 'next'
+import { Poppins } from 'next/font/google'
 import './globals.css'
 import AppLayout from '@/components/layout/AppLayout'
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -19,6 +26,13 @@ export const metadata: Metadata = {
   },
 }
 
+import { AuthProvider } from '@/components/providers/AuthProvider'
+import { NotificationProvider } from '@/components/providers/NotificationProvider'
+import { GoogleAnalytics } from '@next/third-parties/google'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
+import ToastContainer from '@/components/ui/Toast'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
+
 export default function RootLayout({
   children,
 }: {
@@ -26,16 +40,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-screen bg-[#FEFCF8] font-sans antialiased">
-        <AppLayout>{children}</AppLayout>
+      <body className={`min-h-screen bg-[#FEFCF8] dark:bg-slate-900 text-gray-900 dark:text-gray-100 font-sans antialiased ${poppins.className}`}>
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <ErrorBoundary>
+                <AppLayout>{children}</AppLayout>
+              </ErrorBoundary>
+            </NotificationProvider>
+          </AuthProvider>
+          <ToastContainer />
+        </ThemeProvider>
+        <GoogleAnalytics gaId="G-XYZ123TEST" />
       </body>
     </html>
   )

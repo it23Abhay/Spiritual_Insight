@@ -3,22 +3,27 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, User, Sparkles } from 'lucide-react'
+import { Menu, X, User, LogIn } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const navItems = [
-  { href: '/', label: 'Home', emoji: '🏠' },
-  { href: '/jap-mala', label: 'Jap Mala', emoji: '📿' },
-  { href: '/ai-guide', label: 'AI Guide', emoji: '🤖' },
-  { href: '/kids', label: 'Kids Zone', emoji: '🎨' },
-  { href: '/audio', label: 'Audio', emoji: '🎵' },
-  { href: '/videos', label: 'Videos', emoji: '📹' },
-  { href: '/books', label: 'Books', emoji: '📚' },
+  { href: '/', tKey: 'Home', emoji: '🏠' },
+  { href: '/jap-mala', tKey: 'JapMala', emoji: '📿' },
+  { href: '/ai-guide', tKey: 'AIGuide', emoji: '🤖' },
+  { href: '/kids', tKey: 'KidsZone', emoji: '🎨' },
+  { href: '/audio', tKey: 'AudioLibrary', emoji: '🎵' },
+  { href: '/videos', tKey: 'VideoLibrary', emoji: '📹' },
+  { href: '/books', tKey: 'Books', emoji: '📚' },
 ]
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
+  const { data: session, status } = useSession()
+  const { t } = useTranslation()
 
   return (
     <header className="sticky top-0 z-50 w-full glass-card border-b border-white/30 shadow-sm">
@@ -31,7 +36,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Desktop Navigation">
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -50,8 +55,8 @@ export default function Header() {
                     className="absolute inset-0 bg-saffron/10 rounded-lg"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
-                )}
-                <span className="relative">{item.label}</span>
+                  )}
+                <span className="relative">{t(item.tKey)}</span>
               </Link>
             )
           })}
@@ -59,19 +64,39 @@ export default function Header() {
 
         {/* Right icons */}
         <div className="flex items-center gap-2">
-          <Link
-            href="/profile"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-saffron hover:bg-saffron/5 transition-all duration-200"
-          >
-            <User size={16} />
-            <span className="hidden md:block">Profile</span>
-          </Link>
+          {status === 'loading' ? (
+            <div className="hidden sm:block h-8 w-20 bg-gray-100 animate-pulse rounded-lg" />
+          ) : session ? (
+            <Link
+              href="/profile"
+              className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-gray-200 hover:border-saffron/50 hover:bg-saffron/5 transition-all duration-200"
+            >
+              {session.user?.image ? (
+                <Image src={session.user.image} alt="User profile icon" width={24} height={24} className="rounded-full" />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-saffron/20 flex items-center justify-center text-saffron text-xs"><User size={14}/></div>
+              )}
+              <span className="text-sm font-medium text-gray-700 hidden md:block">
+                {session.user?.name?.split(' ')[0] || t('Profile')}
+              </span>
+            </Link>
+          ) : (
+            <Link
+              href="/auth/signin"
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-saffron text-white text-sm font-medium hover:bg-orange-500 shadow-md transition-all duration-200"
+            >
+              <LogIn size={16} />
+              <span className="hidden md:block">{t('SignIn')}</span>
+            </Link>
+          )}
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-saffron/10 hover:text-saffron transition-all duration-200"
-            aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
             <AnimatePresence mode="wait">
               {mobileOpen ? (
@@ -98,7 +123,7 @@ export default function Header() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="lg:hidden overflow-hidden border-t border-white/30 bg-white/90 backdrop-blur-md"
           >
-            <nav className="flex flex-col gap-1 p-4">
+            <nav id="mobile-nav" className="flex flex-col gap-1 p-4" aria-label="Mobile Navigation">
               {navItems.map((item, i) => {
                 const isActive = pathname === item.href
                 return (
@@ -118,20 +143,35 @@ export default function Header() {
                       }`}
                     >
                       <span className="text-xl">{item.emoji}</span>
-                      {item.label}
+                      {t(item.tKey)}
                     </Link>
                   </motion.div>
                 )
               })}
               <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: navItems.length * 0.05 }}>
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-saffron/5 hover:text-saffron transition-all duration-200"
-                >
-                  <User size={20} />
-                  Profile
-                </Link>
+                {session ? (
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-saffron/5 hover:text-saffron transition-all duration-200"
+                  >
+                    {session.user?.image ? (
+                      <Image src={session.user.image} alt="User profile icon" width={24} height={24} className="rounded-full" />
+                    ) : (
+                      <User size={20} className="text-gray-500" />
+                    )}
+                    {t('Profile')}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/signin"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 mt-2 px-4 py-3 rounded-xl text-sm font-medium bg-saffron text-white hover:bg-orange-500 shadow-sm transition-all duration-200"
+                  >
+                    <LogIn size={20} />
+                    {t('SignIn')}
+                  </Link>
+                )}
               </motion.div>
             </nav>
           </motion.div>

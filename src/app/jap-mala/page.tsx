@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useMalaStore } from '@/store/malaStore'
 import { RotateCcw, Play, Pause } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const BEAD_COUNT = 108
 const RADIUS = 140
@@ -16,12 +17,25 @@ function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
 
 export default function JapMalaPage() {
   const { count, completedMalas, isRunning, increment, reset, pause, resume } = useMalaStore()
+  const { t } = useTranslation()
 
   const toggleRunning = () => (isRunning ? pause() : resume())
 
   const handleBeadClick = useCallback(() => {
     if (isRunning) increment()
   }, [isRunning, increment])
+
+  const prevCompletedRef = useRef(completedMalas)
+  useEffect(() => {
+    if (completedMalas > prevCompletedRef.current) {
+      if (typeof window !== 'undefined' && typeof (window as unknown as { gtag?: unknown }).gtag === 'function') {
+        (window as unknown as { gtag: (e: string, n: string, p: object) => void }).gtag('event', 'jap_mala_complete', {
+          total_malas: completedMalas
+        })
+      }
+    }
+    prevCompletedRef.current = completedMalas
+  }, [completedMalas])
 
   const beads = Array.from({ length: BEAD_COUNT }, (_, i) => {
     const angle = (360 / BEAD_COUNT) * i
@@ -43,8 +57,8 @@ export default function JapMalaPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <h1 className="text-3xl font-bold text-deep-blue mb-1">📿 Digital Jap Mala</h1>
-          <p className="text-gray-500 text-sm">Tap the mala or the bead area to count your recitations</p>
+          <h1 className="text-3xl font-bold text-deep-blue dark:text-blue-300 mb-1">📿 {t('DigitalJapMala')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('TapTheMala')}</p>
         </motion.div>
 
         {/* Stats bar */}
@@ -55,13 +69,13 @@ export default function JapMalaPage() {
           className="grid grid-cols-3 gap-4 mb-8"
         >
           {[
-            { label: 'Current Bead', value: `${currentBead} / ${BEAD_COUNT}` },
-            { label: 'Completed Malas', value: completedMalas },
-            { label: 'Total Count', value: count },
+            { label: t('CurrentBead'), value: `${currentBead} / ${BEAD_COUNT}` },
+            { label: t('CompletedMalas'), value: completedMalas },
+            { label: t('TotalCount'), value: count },
           ].map((stat) => (
-            <div key={stat.label} className="glass-card rounded-2xl p-4 text-center border border-white/60">
-              <p className="text-2xl font-bold text-deep-blue">{stat.value}</p>
-              <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+            <div key={stat.label} className="glass-card rounded-2xl p-4 text-center border border-white/60 dark:border-white/10">
+              <p className="text-2xl font-bold text-deep-blue dark:text-blue-300">{stat.value}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -127,16 +141,16 @@ export default function JapMalaPage() {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 mt-8">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={reset}
-            className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-all"
+            className="flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 px-6 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 shadow-sm hover:bg-gray-50 transition-all"
             aria-label="Reset mala"
           >
             <RotateCcw size={16} />
-            Reset
+            {t('Reset')}
           </motion.button>
 
           <motion.button
@@ -148,7 +162,7 @@ export default function JapMalaPage() {
             }`}
             aria-label={isRunning ? 'Pause mala' : 'Start mala'}
           >
-            {isRunning ? <><Pause size={16} /> Pause</> : <><Play size={16} /> Start</>}
+            {isRunning ? <><Pause size={16} /> {t('Pause')}</> : <><Play size={16} /> {t('Start')}</>}
           </motion.button>
         </div>
 

@@ -62,4 +62,25 @@ export async function getJapSessions(userId: string, limitCount = 20) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
+// ── Chat History helpers ────────────────────────
+export async function saveChatHistory(
+  userId: string,
+  messages: { role: string; content: string; timestamp: string }[]
+) {
+  const ref = collection(db, COLLECTIONS.CHAT_HISTORY)
+  return addDoc(ref, { userId, messages, createdAt: serverTimestamp() })
+}
+
+export async function getChatHistory(userId: string, limitCount = 20) {
+  const ref = collection(db, COLLECTIONS.CHAT_HISTORY)
+  const q = query(
+    ref,
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+    limit(limitCount)
+  )
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
 export { db, addDoc, updateDoc, serverTimestamp, collection, doc }

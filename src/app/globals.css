@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Google Fonts ─────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&display=swap');
 
 /* ── CSS Variables (Design Tokens) ──────────── */
 :root {
@@ -40,8 +38,41 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: 'Poppins', 'Inter', 'Noto Sans', sans-serif;
+  font-size: 16px; /* WCAG — minimum 16px body text */
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Accessibility — Focus Visible (WCAG AA) ────── */
+:focus-visible {
+  outline: 2px solid var(--saffron);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Accessible skip-link ─────────────────────── */
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-to-main:focus {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 9999;
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1.5rem;
+  background: var(--deep-blue);
+  color: white;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  text-decoration: none;
 }
 
 /* ── Spiritual Gradient Utilities ────────────── */
@@ -58,6 +89,10 @@ body {
     background: linear-gradient(180deg, #fefcf8 0%, #f9f5ed 100%);
   }
 
+  .dark .gradient-calm {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  }
+
   .text-gradient-spiritual {
     background: linear-gradient(135deg, #1e3a8a 0%, #ff9933 100%);
     -webkit-background-clip: text;
@@ -72,6 +107,11 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
+  .dark .glass-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
   .mandala-bg {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='28' fill='none' stroke='%23FF993315' stroke-width='1'/%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='%23FF993310' stroke-width='1'/%3E%3Ccircle cx='30' cy='30' r='12' fill='none' stroke='%23FF993310' stroke-width='1'/%3E%3C/svg%3E");
     background-size: 60px 60px;
@@ -84,6 +124,10 @@ body {
 }
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--saffron);

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import FeatureCard from '@/components/ui/FeatureCard'
+import { useTranslation } from 'react-i18next'
 
 const dailyQuote = {
   text: "The soul is never born nor dies at any time. It has not come into being, does not come into being, and will not come into being. It is unborn, eternal, ever-existing, and primeval.",
@@ -67,16 +68,18 @@ const itemVariants = {
 }
 
 export default function HomePage() {
+  const { t } = useTranslation()
+
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-deep-blue-900 via-deep-blue to-saffron py-20 px-4 text-white mandala-bg">
+      <section className="relative overflow-hidden gradient-spiritual py-20 px-4 text-white mandala-bg shadow-inner">
         <div className="mx-auto max-w-3xl text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="mb-4 text-6xl"
+            className="mb-4 text-6xl drop-shadow-md"
           >
             🕉️
           </motion.div>
@@ -84,7 +87,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="mb-4 text-4xl font-bold sm:text-5xl"
+            className="mb-4 text-4xl font-bold sm:text-5xl drop-shadow-lg"
           >
             Spiritual Insights
           </motion.h1>
@@ -92,7 +95,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.6 }}
-            className="text-lg text-white/80"
+            className="text-lg text-white/90 drop-shadow-sm font-medium"
           >
             Your daily spiritual companion — mantras, stories, meditation, and more.
           </motion.p>
@@ -107,10 +110,10 @@ export default function HomePage() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <span>✨</span> Daily Wisdom
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+            <span>✨</span> {t('DailyQuote')}
           </h2>
-          <div className="glass-card rounded-2xl border border-gold/30 p-6 shadow-sm relative overflow-hidden">
+          <div className="glass-card rounded-2xl border border-gold/30 p-6 shadow-sm relative overflow-hidden text-left.">
             <div className="absolute top-0 left-0 w-1 h-full gradient-gold rounded-l-2xl" />
             <p className="text-gray-700 leading-relaxed text-base italic pl-4">
               "{dailyQuote.text}"
@@ -126,46 +129,45 @@ export default function HomePage() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <span>🙏</span> Today's Mantra
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+            <span>🙏</span> {t('TodaysMantra')}
           </h2>
           <div className="gradient-spiritual rounded-2xl p-8 text-white text-center shadow-lg">
             <p className="text-4xl font-bold mb-3 tracking-wide" style={{ fontFamily: 'Noto Sans Devanagari, Noto Sans, sans-serif' }}>
               {todayMantra}
             </p>
-            <p className="text-white/80 text-sm mb-6">{mantraTranslation}</p>
+            <p className="text-white/90 text-sm mb-6 font-medium">{mantraTranslation}</p>
             <motion.a
               href="/jap-mala"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              className="inline-flex items-center gap-2 rounded-full bg-white text-deep-blue font-semibold px-8 py-3 shadow-md hover:shadow-lg transition-shadow duration-200"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-deep-blue font-semibold px-8 py-3 shadow-md hover:shadow-lg transition-all duration-200"
+              aria-label="Start Jap Mala session"
             >
-              📿 Start Jap Mala
+              <span aria-hidden="true">📿</span> {t('StartJapMala')}
             </motion.a>
           </div>
         </motion.section>
 
         {/* Feature Cards */}
-        <motion.section
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-50px' }}
-        >
-          <h2 className="text-xl font-semibold text-gray-700 mb-6 flex items-center gap-2">
-            <span>🌟</span> Explore
+        <section>
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-6 flex items-center gap-2">
+            <span>🌟</span> {t('Explore')}
           </h2>
-          <motion.div
-            variants={containerVariants}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-          >
-            {features.map((feature) => (
-              <motion.div key={feature.href} variants={itemVariants}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((feature, idx) => (
+              <motion.div 
+                key={feature.href} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+              >
                 <FeatureCard {...feature} />
               </motion.div>
             ))}
-          </motion.div>
-        </motion.section>
+          </div>
+        </section>
       </div>
     </div>
   )

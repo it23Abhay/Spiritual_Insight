@@ -1,4 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { apiRateLimiter } from '@/lib/rateLimit'
+import { db } from '@/lib/db'
+import { collection, getDocs } from 'firebase/firestore'
 
 const AUDIO_DATA = [
   { id: '1', title: 'Om Namah Shivaya', artist: 'Pandit Ravi Shankar', category: 'Mantras', fileUrl: '', duration: 504, albumImage: '🕉️' },
@@ -13,6 +16,24 @@ const AUDIO_DATA = [
   { id: '10', title: 'Mahamrityunjaya Mantra', artist: 'Shankar Sahney', category: 'Mantras', fileUrl: '', duration: 558, albumImage: '🌺' },
 ]
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
+  const rateLimitResponse = apiRateLimiter.check(ip)
+  
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
+  try {
+    const querySnapshot = await getDocs(collection(db, 'audio_library'))
+    if (!querySnapshot.empty) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tracks = querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))
+      return NextResponse.json({ tracks })
+    }
+  } catch (error) {
+    console.error('Error fetching audio_library:', error)
+  }
+
   return NextResponse.json({ tracks: AUDIO_DATA })
 }

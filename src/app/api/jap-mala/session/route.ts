@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
 import { collection, addDoc, query, where, orderBy, limit, getDocs, serverTimestamp } from 'firebase/firestore'
+import { apiRateLimiter } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
+    const rateLimitResponse = apiRateLimiter.check(ip)
+    
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
     const body = await req.json()
     const { userId, mantraName, count, completedMalas } = body
 

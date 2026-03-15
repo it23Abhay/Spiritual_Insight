@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { apiRateLimiter } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
+    const rateLimitResponse = apiRateLimiter.check(ip)
+    
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
     const { message } = await req.json()
 
     if (!message || typeof message !== 'string') {
@@ -52,6 +60,10 @@ Guidelines:
     })
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
+      if (errorData?.error?.message) {
+        return NextResponse.json({ reply: `OpenAI API Error: ${errorData.error.message}` })
+      }
       throw new Error(`OpenAI API error: ${response.status}`)
     }
 

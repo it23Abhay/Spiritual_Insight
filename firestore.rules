@@ -1,0 +1,55 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is accessing their own document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 1. Users collection: Users can only read and write their own profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // 2. Jap Mala Sessions: Users can only read and write their own sessions
+    // Using wildcard docId because the doc ID might be auto-generated
+    match /jap_sessions/{docId} {
+      allow read, write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Also allow reading if the document already belongs to the user
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 3. Chat History: Users can only read and write their own chat logs
+    match /chat_history/{docId} {
+      allow read, write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 4. Public Collections: Anyone can read, no one can write from the client app
+    match /stories/{document=**} {
+      allow read: if true;
+      allow write: if false; // Only admin SDK can write
+    }
+    
+    match /audio_library/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /video_library/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /books/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

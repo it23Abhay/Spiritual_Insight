@@ -32,8 +32,9 @@ export default function FeatureCard({ emoji, title, description, href, color = '
       <Link
         href={href}
         className={`group flex flex-col gap-3 rounded-2xl border p-6 shadow-sm transition-all duration-300 ${c.bg} ${c.border} ${c.hover}`}
+        aria-label={`${title}: ${description}`}
       >
-        <span className="text-4xl transition-transform duration-300 group-hover:scale-110">{emoji}</span>
+        <span className="text-4xl transition-transform duration-300 group-hover:scale-110" aria-hidden="true">{emoji}</span>
         <div>
           <h3 className="font-semibold text-gray-800 text-base mb-1">{title}</h3>
           <p className="text-sm text-gray-500 leading-relaxed">{description}</p>

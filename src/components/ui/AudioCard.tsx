@@ -11,10 +11,16 @@ interface AudioCardProps {
   duration?: string
   coverEmoji?: string
   isPlaying?: boolean
+  isFavourite?: boolean
   onPlay?: (id: string) => void
+  onFavourite?: (id: string) => void
 }
 
-export default function AudioCard({ id, title, artist, category, duration, coverEmoji = '🎵', isPlaying = false, onPlay }: AudioCardProps) {
+export default function AudioCard({
+  id, title, artist, category, duration,
+  coverEmoji = '🎵', isPlaying = false, isFavourite = false,
+  onPlay, onFavourite,
+}: AudioCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -36,6 +42,21 @@ export default function AudioCard({ id, title, artist, category, duration, cover
 
       {/* Duration */}
       {duration && <span className="text-xs text-gray-400 hidden sm:block">{duration}</span>}
+
+      {/* Favourite */}
+      {onFavourite && (
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          onClick={() => onFavourite(id)}
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors"
+          aria-label={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+        >
+          <Heart
+            size={16}
+            className={isFavourite ? 'fill-rose-500 text-rose-500' : 'text-gray-300 hover:text-rose-400'}
+          />
+        </motion.button>
+      )}
 
       {/* Play button */}
       <motion.button

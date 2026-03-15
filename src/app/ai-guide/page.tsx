@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Sparkles } from 'lucide-react'
 import ChatMessage from '@/components/ui/ChatMessage'
+import { useSession } from 'next-auth/react'
+import { saveChatHistory } from '@/lib/db'
 
 interface Message {
   role: 'user' | 'ai'
@@ -23,6 +25,7 @@ const getTimestamp = () =>
   new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
 export default function AIGuidePage() {
+  const { data: session } = useSession()
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'ai',
@@ -38,12 +41,35 @@ export default function AIGuidePage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
+  // Save session to Firestore when user leaves or session has >= 2 messages
+  useEffect(() => {
+    const userId = (session?.user as { id?: string })?.id
+    if (!userId || messages.length < 2) return
+
+    const saveSession = () => {
+      const forStorage = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+        timestamp: m.timestamp,
+      }))
+      saveChatHistory(userId, forStorage).catch(console.error)
+    }
+
+    window.addEventListener('beforeunload', saveSession)
+    return () => window.removeEventListener('beforeunload', saveSession)
+  }, [session, messages])
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return
     const userMsg: Message = { role: 'user', content: text.trim(), timestamp: getTimestamp() }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
+
+    // GA event
+    if (typeof window !== 'undefined' && typeof (window as unknown as { gtag?: unknown }).gtag === 'function') {
+      (window as unknown as { gtag: (e: string, n: string, p: object) => void }).gtag('event', 'ai_chat_sent', { message_length: text.trim().length })
+    }
 
     try {
       const res = await fetch('/api/chat', {
@@ -154,6 +180,7 @@ export default function AIGuidePage() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about mantras, meditation, mythology…"
           disabled={loading}
+          aria-label="Ask a spiritual question"
           className="flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 shadow-sm focus:border-saffron focus:outline-none focus:ring-2 focus:ring-saffron/20 disabled:opacity-60 transition-all"
         />
         <motion.button
